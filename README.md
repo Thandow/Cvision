@@ -1,13 +1,13 @@
-#Cvision AI Resume Builder
+# Cvision AI Resume Builder
 
-#Intelligent ATS-Friendly Resume Generation System
+## Intelligent ATS-Friendly Resume Generation System
 
-#📌 Project Overview
+# 📌 Project Overview
 
 Cvision is an AI-powered resume generation platform that creates customized, ATS-optimized resumes based on user inputs, target job descriptions, and industry context.
 It supports multiple templates, job matching analysis, ATS scoring, and smart content suggestions with a continuous feedback loop.
 
-#🧩 Core Features
+# 🧩 Core Features
 
 AI-generated resume content based on user career information
 
@@ -27,7 +27,7 @@ Export formats: PDF, DOCX, HTML
 
 Resume version management dashboard
 
-#🛠️ Tech Stack
+# 🛠️ Tech Stack
 
 Frontend: React + Vite
 
@@ -45,7 +45,7 @@ DOCX: Structured HTML → DOCX conversion
 
 Storage: Base44 Entities (Resume, Feedback, Templates)
 
-#📂 Project Structure
+# 📂 Project Structure
 cvision-ai-resume-builder/
 │
 ├── src/
@@ -78,7 +78,7 @@ cvision-ai-resume-builder/
 ├── vite.config.js
 └── README.md
 
-#⚙️ Setup Instructions
+# ⚙️ Setup Instructions
 1️⃣ Prerequisites
 
 Ensure you have the following installed:
@@ -127,7 +127,7 @@ To preview the production build:
 
 npm run preview
 
-#🧪 Testing & Quality Assurance
+# 🧪 Testing & Quality Assurance
 
 Recommended testing steps:
 
