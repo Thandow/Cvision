@@ -1,0 +1,189 @@
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Save, 
+  FileText, 
+  Eye, 
+  EyeOff,
+  Download,
+  Sparkles,
+  Loader2
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+import StepIndicator from "../components/resume/StepIndicator";
+import PersonalInfoForm from "../components/resume/PersonalInfoForm";
+import ExperienceForm from "../components/resume/ExperienceForm";
+import EducationForm from "../components/resume/EducationForm";
+import SkillsForm from "../components/resume/SkillsForm";
+import ProjectsForm from "../components/resume/ProjectsForm";
+import OptimizeForm from "../components/resume/OptimizeForm";
+import ResumePreview from "../components/resume/ResumePreview";
+import EnhancedResumePreview from "../components/resume/EnhancedResumePreview";
+
+const TOTAL_STEPS = 6;
+
+export default function ResumeBuilder() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showPreview, setShowPreview] = useState(true);
+  const [template, setTemplate] = useState("modern");
+  const [resumeData, setResumeData] = useState({
+    title: "My Resume",
+    personal_info: {},
+    experiences: [],
+    education: [],
+    skills: [],
+    projects: [],
+    target_job: "",
+    target_keywords: [],
+    template: "modern",
+    generated_content: {},
+    customization: {},
+    user_edits: [],
+  });
+
+  const queryClient = useQueryClient();
+
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
+      return await base44.entities.Resume.create(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['resumes'] });
+      toast.success("Resume saved successfully!");
+    },
+    onError: () => {
+      toast.error("Failed to save resume");
+    },
+  });
+
+  const handleDataChange = (newData) => {
+    setResumeData(newData);
+  };
+
+  const goToStep = (step) => {
+    if (step >= 1 && step <= TOTAL_STEPS) {
+      setCurrentStep(step);
+    }
+  };
+
+  const nextStep = () => {
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSave = () => {
+    saveMutation.mutate({
+      ...resumeData,
+      template,
+    });
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <PersonalInfoForm data={resumeData} onChange={handleDataChange} />;
+      case 2:
+        return <ExperienceForm data={resumeData} onChange={handleDataChange} />;
+      case 3:
+        return <EducationForm data={resumeData} onChange={handleDataChange} />;
+      case 4:
+        return <SkillsForm data={resumeData} onChange={handleDataChange} />;
+      case 5:
+        return <ProjectsForm data={resumeData} onChange={handleDataChange} />;
+      case 6:
+        return <OptimizeForm data={resumeData} onChange={handleDataChange} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Resume Builder</h1>
+                <p className="text-xs text-slate-500">Create ATS-friendly resumes</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="hidden md:flex"
+              >
+                {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                {showPreview ? "Hide Preview" : "Show Preview"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saveMutation.isPending}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Step Indicator */}
+      <div className="bg-white border-b border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <StepIndicator currentStep={currentStep} onStepClick={goToStep} />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className={`grid gap-8 ${showPreview ? "lg:grid-cols-2" : ""}`}>
+          {/* Form Section */}
+          <div>
+            <Card className="p-6 md:p-8 border-slate-200 shadow-sm">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {renderStep()}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Navigation */}
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+ 
