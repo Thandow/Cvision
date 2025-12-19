@@ -1,0 +1,189 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  ArrowLeft, 
+  FileSearch, 
+  Target, 
+  TrendingUp,
+  Loader2,
+  AlertCircle
+} from "lucide-react";
+import ATSScoreCard from "../components/resume/ATSScoreCard";
+import JobMatchAnalyzer from "../components/resume/JobMatchAnalyzer";
+import IndustrySelector from "../components/resume/IndustrySelector";
+
+export default function ResumeAnalysis() {
+  const [selectedResumeId, setSelectedResumeId] = useState("");
+  const [resumeData, setResumeData] = useState(null);
+
+  const { data: resumes = [], isLoading } = useQuery({
+    queryKey: ['resumes'],
+    queryFn: () => base44.entities.Resume.list("-created_date"),
+  });
+
+  const handleResumeSelect = (resumeId) => {
+    setSelectedResumeId(resumeId);
+    const resume = resumes.find(r => r.id === resumeId);
+    setResumeData(resume);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-50">
+      <div className="max-w-5xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <Link to={createPageUrl("MyResumes")}>
+            <Button variant="ghost" className="mb-4">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Resumes
+            </Button>
+          </Link>
+          
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 mb-6 shadow-lg shadow-indigo-200">
+              <FileSearch className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-3">Resume Analysis</h1>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              Get comprehensive ATS compatibility scores, job match analysis, and industry-specific optimization recommendations
+            </p>
+          </div>
+        </div>
+
+        {/* Resume Selection */}
+        <Card className="border-slate-200 mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Select Resume to Analyze</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+              </div>
+            ) : resumes.length === 0 ? (
+              <div className="text-center py-8">
+                <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                <p className="text-slate-600 mb-4">No resumes found</p>
+                <Link to={createPageUrl("ResumeBuilder")}>
+                  <Button className="bg-indigo-600 hover:bg-indigo-700">
+                    Create Resume
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <Select value={selectedResumeId} onValueChange={handleResumeSelect}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Choose a resume to analyze" />
+                </SelectTrigger>
+                <SelectContent>
+                  {resumes.map((resume) => (
+                    <SelectItem key={resume.id} value={resume.id}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{resume.title}</span>
+                          <span className="text-xs text-slate-500">
+                            {resume.personal_info?.full_name || "No name"} • 
+                            {resume.target_job || "No target job"}
+                          </span>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Analysis Components */}
+        {resumeData ? (
+          <div className="space-y-8">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-slate-200 bg-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <FileSearch className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {(resumeData.experiences || []).length}
+                      </p>
+                      <p className="text-sm text-slate-500">Experiences</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-slate-200 bg-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {(resumeData.skills || []).reduce((acc, cat) => acc + cat.items.length, 0)}
+                      </p>
+                      <p className="text-sm text-slate-500">Skills Listed</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-slate-200 bg-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                      <Target className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {(resumeData.target_keywords || []).length}
+                      </p>
+                      <p className="text-sm text-slate-500">Target Keywords</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Industry Selector */}
+            <IndustrySelector 
+              resumeData={resumeData} 
+              onChange={setResumeData}
+            />
+
+            {/* ATS Score */}
+            <ATSScoreCard 
+              resumeData={resumeData}
+              onAnalyze={(analysis) => setResumeData({ ...resumeData, ats_score: analysis })}
+            />
+
+            {/* Job Match */}
+            <JobMatchAnalyzer resumeData={resumeData} />
+          </div>
+        ) : !isLoading && resumes.length > 0 && (
+          <Card className="border-slate-200">
+            <CardContent className="p-12 text-center">
+              <FileSearch className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                Select a Resume to Analyze
+              </h3>
+              <p className="text-slate-500">
+                Choose a resume from the dropdown above to view detailed analysis
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
